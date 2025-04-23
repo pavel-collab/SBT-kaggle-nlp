@@ -58,9 +58,10 @@ def main():
 
     # Токенизация
     def tokenize_function(examples):
-        return tokenizer(examples['text'], padding="max_length", truncation=True)
+        return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
 
     tokenized_train = train_dataset.map(tokenize_function, batched=True)
+    tokenized_val = train_dataset.map(tokenize_function, batched=True)
 
     # Настройка параметров обучения
     training_args = TrainingArguments(
@@ -80,7 +81,7 @@ def main():
         model=model,
         args=training_args,
         train_dataset=tokenized_train,
-        eval_dataset=tokenized_train,  # Можно использовать тренировочный набор для валидации
+        eval_dataset=tokenized_val, 
     )
 
     try:
