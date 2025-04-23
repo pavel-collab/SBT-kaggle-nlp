@@ -2,7 +2,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trai
 import argparse
 from pathlib import Path
 import torch
-from tqdm import tqdm
+import numpy as np
 from utils.utils import get_test_data
 import pandas as pd
 from utils.constants import *
@@ -39,16 +39,28 @@ def tokenize_function(examples):
 
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
-prediction = []
-for batch in tqdm(tokenized_test_dataset):
-    with torch.no_grad():
-        outputs = model(**batch)
-    
-    logits = outputs.logits
-    predicted = torch.argmax(logits, dim=-1)
-    prediction.extend(predicted)
+predicted_trainer = Trainer(
+    model=model,
+    eval_dataset=tokenized_test_dataset,
+)
 
-df = pd.DataFrame(prediction, columns=classes_list)
-df.to_csv(SUBMISSION_FILE_NAME)
+with torch.no_grad():
+    # Получение предсказаний
+    predictions = predicted_trainer.predict(tokenized_test_dataset)
 
+#! in some models predictions.predictions is a complex tupple, not a numpy array 
+if isinstance(predictions.predictions, tuple):
+    target_predictions = predictions.predictions[0]
+else:
+    target_predictions = predictions.predictions
+
+preds = np.argmax(target_predictions, axis=-1)
+
+df = pd.DataFrame(preds, columns=['label'])
+
+submit_df = pd.read_csv(test_csv_file)
+submit_df = submit_df.drop(columns=['Question'])
+submit_df = pd.concat([submit_df, df], axis=1)
+
+submit_df.to_csv(SUBMISSION_FILE_NAME, index=False)
 print("Submission file created successfully!")

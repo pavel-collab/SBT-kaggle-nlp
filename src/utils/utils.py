@@ -116,6 +116,7 @@ def get_train_data():
 
 def get_test_data():
     test_df = pd.read_csv(test_csv_file)
+    test_df = test_df.drop(columns=['id'])
     test_df = test_df.rename(columns={'Question': 'text'})
 
     test_dataset = Dataset.from_pandas(test_df)
