@@ -6,6 +6,12 @@ from sklearn.metrics import (accuracy_score,
                              confusion_matrix, 
                              classification_report)
 import matplotlib.pyplot as plt
+import torch
+from sklearn.model_selection import train_test_split
+import pandas as pd
+from datasets import Dataset
+from utils.constants import *
+import seaborn as sns
 
 def compute_metrics(eval_preds):
     logits, labels = eval_preds
@@ -25,7 +31,7 @@ def compute_metrics(eval_preds):
         'f1_macro': validation_f1_macro
     }
     
-def evaleate_model(model, tokenized_val_dataset, device):
+def evaleate_model(model, trainer, tokenized_val_dataset, device):
     model.to(device)
     model.eval()
     predictions = trainer.predict(tokenized_val_dataset)
@@ -35,7 +41,7 @@ def evaleate_model(model, tokenized_val_dataset, device):
     report = classification_report(true_lables, preds)
     accuracy = np.sum(np.diag(cm)) / np.sum(cm)
     # Вычисление взвешенной F1-меры для текущей модели
-    micro_f1 = f1_score(true_lables, preds, average='mocro')
+    micro_f1 = f1_score(true_lables, preds, average='micro')
     return cm, report, accuracy, micro_f1
 
 def plot_confusion_matrix(cm, classes, model_name=None, save_file_path=None):
@@ -79,3 +85,36 @@ def plot_confusion_matrix(cm, classes, model_name=None, save_file_path=None):
             assert model_name, "model_name must be provided when save_file_path is not None"
             plt.savefig(f"{save_file_path}/confusion_matrix_{model_name}.jpg")
             return f"{save_file_path}/confusion_matrix_{model_name}.jpg"
+        
+def fix_random_seed(seed=20):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = False
+    
+def get_train_data():
+    df = pd.read_csv(train_csv_file)
+    df = df.rename(columns={'Question': 'text'})
+
+    train_df, val_df = train_test_split(df, test_size=0.2, random_state=20)
+    train_df = train_df.reset_index(drop=True)
+    val_df = val_df.reset_index(drop=True)
+    
+    train_dataset = Dataset.from_pandas(train_df)
+    val_dataset = Dataset.from_pandas(val_df)
+    
+    return train_dataset, val_dataset
+
+def get_test_data():
+    test_df = pd.read_csv(test_csv_file)
+    test_df = test_df.rename(columns={'Question': 'text'})
+
+    test_dataset = Dataset.from_pandas(test_df)
+    
+    return test_dataset
+
+def get_device():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    return device

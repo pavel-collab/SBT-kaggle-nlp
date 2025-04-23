@@ -1,0 +1,49 @@
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer
+import argparse
+from pathlib import Path
+import torch
+from tqdm import tqdm
+from utils.utils import get_test_data
+import pandas as pd
+from utils.constants import *
+
+SUBMISSION_FILE_NAME = 'submission.csv'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-m', '--model_path', help='set a path to the model that we want to evaluate')
+args = parser.parse_args()
+
+model_file_path = Path(args.model_path)
+assert(model_file_path.exists())
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# Загрузка токенизатора
+tokenizer = AutoTokenizer.from_pretrained(model_file_path.absolute())
+# Загрузка модели
+model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute())
+
+model.to(device)
+model.eval()
+
+test_dataset = get_test_data()
+
+# Токенизация данных
+def tokenize_function(examples):
+    return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
+
+tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
+
+prediction = []
+for batch in tqdm(tokenized_test_dataset):
+    with torch.no_grad():
+        outputs = model(**batch)
+    
+    logits = outputs.logits
+    predicted = torch.argmax(logits, dim=-1)
+    prediction.extend(predicted)
+
+df = pd.DataFrame(prediction, columns=classes_list)
+df.to_csv(SUBMISSION_FILE_NAME)
+
+print("Submission file created successfully!")

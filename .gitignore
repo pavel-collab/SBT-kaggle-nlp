@@ -5,3 +5,4 @@ results
 logs
 tmp_trainer
 .venv
+__pycache__
