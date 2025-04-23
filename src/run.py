@@ -29,16 +29,20 @@ try:
         tokenized_val_dataset = val_dataset.map(tokenize_function, batched=True)
         
         training_args = TrainingArguments(
-            output_dir=f"./results/{model_name}_results",
+            output_dir=f"./results/{model_name.replace('/', '-')}_results",
             evaluation_strategy="steps",
             learning_rate=2e-5,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size,
             num_train_epochs=num_epoches,
             weight_decay=0.01,
-            logging_dir=f"./logs/{model_name}_logs",  
+            logging_dir=f"./logs/{model_name.replace('/', '-')}_logs",  
             save_steps=1000, # сохранение чекпоинтов модели каждые 1000 шагов# директория для логов TensorBoard
-            logging_steps=100
+            logging_steps=100,
+            save_total_limit=5, # Сохранять только последние 5 чекпоинтов
+            load_best_model_at_end=True,          # Загружать лучшую модель в конце
+            metric_for_best_model="accuracy",     # Метрика для определения "лучшей" модели
+            greater_is_better=True,                # Указать, что большее значение метрики лучше
         )
         
         trainer = CustomTrainer(
@@ -55,6 +59,6 @@ try:
         except Exception as ex:
             print(f"[ERROR] with training {model_name}: {ex}")
             
-        tokenizer.save_pretrained(f"./results/{model_name}_results")
+        tokenizer.save_pretrained(f"./results/{model_name}_results/tokenizer")
 except KeyboardInterrupt:
     print(f"[STOP] training with keyboard interrupt")

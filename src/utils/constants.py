@@ -6,7 +6,6 @@ model_list = [
     # "roberta-base",
     # "albert-base-v2",
     # "xlnet-base-cased",
-    # "t5-base",
     # "google/electra-base-discriminator",
     # "facebook/bart-base",
     # "microsoft/deberta-base"

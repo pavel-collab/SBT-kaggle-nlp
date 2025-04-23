@@ -35,7 +35,14 @@ def evaleate_model(model, trainer, tokenized_val_dataset, device):
     model.to(device)
     model.eval()
     predictions = trainer.predict(tokenized_val_dataset)
-    preds = np.argmax(predictions.predictions, axis=-1)
+    
+    #! in some models predictions.predictions is a complex tupple, not a numpy array 
+    if isinstance(predictions.predictions, tuple):
+        target_predictions = predictions.predictions[0]
+    else:
+        target_predictions = predictions.predictions
+    
+    preds = np.argmax(target_predictions, axis=-1)
     true_lables = tokenized_val_dataset['label']
     cm = confusion_matrix(true_lables, preds)
     report = classification_report(true_lables, preds)

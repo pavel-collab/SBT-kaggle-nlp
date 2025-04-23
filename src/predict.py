@@ -16,10 +16,15 @@ args = parser.parse_args()
 model_file_path = Path(args.model_path)
 assert(model_file_path.exists())
 
+tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+assert(tokenizer_file_path.exists())
+
+model_name = model_file_path.parent.name
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Загрузка токенизатора
-tokenizer = AutoTokenizer.from_pretrained(model_file_path.absolute())
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
 # Загрузка модели
 model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute())
 
