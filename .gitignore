@@ -6,3 +6,4 @@ logs
 tmp_trainer
 .venv
 __pycache__
+tmp

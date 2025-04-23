@@ -20,7 +20,7 @@ train_csv_file = './data/train.csv'
 test_csv_file = './data/test.csv'
 
 batch_size = 8
-num_epoches = 3
+num_epoches = 5
 
 class_weights=torch.tensor([0.4903152069297401, 
                             0.5230364476386037, 

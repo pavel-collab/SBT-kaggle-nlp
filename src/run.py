@@ -17,7 +17,14 @@ try:
     for model_name in model_list:
         model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        data_collator = DataCollatorWithPadding(tokenizer) #? нужен для чего
+        tokenizer.add_special_tokens({'additional_special_tokens': ['[MATH]']})
+        '''
+        После того, как мы добавили новые токены, нужно обязательно обновить размер словаря модели,
+        иначе при работе с эмбеддингами, модель может встретить индекс токена, который она вообще не знает
+        '''
+        model.resize_token_embeddings(len(tokenizer))
+
+        data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
 
         model.to(device)
         
@@ -40,9 +47,9 @@ try:
             save_steps=1000, # сохранение чекпоинтов модели каждые 1000 шагов# директория для логов TensorBoard
             logging_steps=100,
             save_total_limit=5, # Сохранять только последние 5 чекпоинтов
-            load_best_model_at_end=True,          # Загружать лучшую модель в конце
-            metric_for_best_model="accuracy",     # Метрика для определения "лучшей" модели
-            greater_is_better=True,                # Указать, что большее значение метрики лучше
+            # load_best_model_at_end=True,          # Загружать лучшую модель в конце
+            # metric_for_best_model="accuracy",     # Метрика для определения "лучшей" модели
+            # greater_is_better=True,                # Указать, что большее значение метрики лучше
         )
         
         trainer = CustomTrainer(
