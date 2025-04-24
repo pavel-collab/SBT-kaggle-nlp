@@ -9,3 +9,4 @@ datasets
 accelerate==0.27.2
 tensorboard
 openai==0.28
+vllm
