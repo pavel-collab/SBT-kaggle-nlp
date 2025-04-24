@@ -10,3 +10,5 @@ accelerate==0.27.2
 tensorboard
 openai==0.28
 vllm
+emoji==1.4.1
+PyQt5
