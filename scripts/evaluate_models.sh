@@ -44,7 +44,7 @@ for dir in ./results/*; do
         # Извлекаем имя родительской директории
         model_name="${parent_directory##*/}"
 
-        if [[ "$model_path" != *checkpoint-3000* ]]; then
+        if [[ "$model_path" != *checkpoint-5000* ]]; then
             continue
         fi
 

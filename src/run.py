@@ -66,6 +66,6 @@ try:
         except Exception as ex:
             print(f"[ERROR] with training {model_name}: {ex}")
             
-        tokenizer.save_pretrained(f"./results/{model_name}_results/tokenizer")
+        tokenizer.save_pretrained(f"./results/{model_name.replace('/', '-')}_results/tokenizer")
 except KeyboardInterrupt:
     print(f"[STOP] training with keyboard interrupt")
