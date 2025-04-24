@@ -17,12 +17,12 @@ try:
     for model_name in model_list:
         model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        tokenizer.add_special_tokens({'additional_special_tokens': ['[MATH]']})
+        # tokenizer.add_special_tokens({'additional_special_tokens': ['[MATH]']})
         '''
         После того, как мы добавили новые токены, нужно обязательно обновить размер словаря модели,
         иначе при работе с эмбеддингами, модель может встретить индекс токена, который она вообще не знает
         '''
-        model.resize_token_embeddings(len(tokenizer))
+        # model.resize_token_embeddings(len(tokenizer))
 
         data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
 

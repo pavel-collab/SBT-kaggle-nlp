@@ -147,7 +147,7 @@ def get_train_data():
     df = df.rename(columns={'Question': 'text'})
 
     # df['text'] = df['text'].apply(clean_math_text)
-    df['text'] = df['text'].apply(mask_latex_in_text)
+    # df['text'] = df['text'].apply(mask_latex_in_text)
 
     train_df, val_df = train_test_split(df, test_size=0.2, random_state=20)
     train_df = train_df.reset_index(drop=True)
