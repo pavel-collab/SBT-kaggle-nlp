@@ -43,8 +43,11 @@ idx2labels ={
 }
 
 # Промпт с уточнением стиля
-prompt = f"""Generate an example of a short piece of mathematical text, which is {target_label} problem.
-Don't use general phrases, give an example of mathematical problem that teacher can give in school or univercity."""
+prompt = f"""
+Generate an example of a short piece of mathematical text, which is {target_label} problem.
+Don't use general phrases, give an example of mathematical problem that teacher can give in school or univercity.
+Make a brief answer. Only text of the unswer without introduction phrases.
+"""
 
 sampling_params = SamplingParams(
             temperature=0.9, top_k=500, top_p=0.9, max_tokens=512, n=n_samples
@@ -103,19 +106,24 @@ for output in outputs[0].outputs:
         score = propabilities[0][result_lable].detach().item()
         result = idx2labels[result_lable.detach().item()]
         
-    output_file_path = Path(args.output_path)
-    output_file = Path(f"{output_file_path.absolute()}/{target_label.replace(' ', '-')}_generated_samples.csv")
-    file_create = output_file.exists()
-
-    if result == target_label and score > 0.7:
-        # clean result before insert in file
-        cleaned_generation = generated.replace(',', '').replace('\n', ' ')
+    print(f"GENERATED RESULT:\n{generated}")
         
-        with open(output_file.absolute(), 'a') as fd:
-            if not file_create:
-                fd.write("Question,label\n")
-            fd.write(f"{cleaned_generation},{result_lable.detach().item()}\n")
-        accepted_samples_number += 1
+    # output_file_path = Path(args.output_path)
+    # output_file = Path(f"{output_file_path.absolute()}/{target_label.replace(' ', '-')}_generated_samples.csv")
+    # file_create = output_file.exists()
+
+    # if result == target_label and score > 0.7:
+    #     # clean result before insert in file
+    #     cleaned_generation = generated.replace(',', '').replace('\n', ' ')
+        
+    #     with open(output_file.absolute(), 'a') as fd:
+    #         if not file_create:
+    #             fd.write("Question,label\n")
+    #         fd.write(f"{cleaned_generation},{result_lable.detach().item()}\n")
+    #     accepted_samples_number += 1
+
+gc.collect()
+torch.cuda.empty_cache()
     
 print("SUCCESSFUL GENERATION COMPLITION.")
 print(f"NUMBER OF ACCEPTED SAMPLES [{accepted_samples_number}/{n_samples}]")
