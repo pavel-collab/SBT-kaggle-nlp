@@ -18,6 +18,7 @@ n_classes = len(classes_list)
 
 train_csv_file = './data/train.csv'
 test_csv_file = './data/test.csv'
+generated_csv_file = './data/generated/generated_train.csv'
 
 batch_size = 8
 num_epoches = 5

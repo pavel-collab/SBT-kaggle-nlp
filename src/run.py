@@ -1,3 +1,4 @@
+import argparse
 from utils.constants import *
 from utils.utils import (fix_random_seed,
                          get_device,
@@ -8,10 +9,14 @@ from transformers import (AutoTokenizer,
                           Trainer, TrainingArguments)
 from utils.custom_trainer import CustomTrainer
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--use_generation', action='store_true', help='if we using generation data for train')
+args = parser.parse_args()
+
 fix_random_seed()
 device = get_device()
 
-train_dataset, val_dataset = get_train_data()
+train_dataset, val_dataset = get_train_data(use_generation=args.use_generation)
 
 try:
     for model_name in model_list:

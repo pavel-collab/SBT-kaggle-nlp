@@ -142,7 +142,7 @@ def mask_latex_in_text(text):
     new_text += text[last_idx:]
     return new_text
     
-def get_train_data():
+def get_train_data(use_generation=False):
     df = pd.read_csv(train_csv_file)
     df = df.rename(columns={'Question': 'text'})
 
@@ -152,6 +152,12 @@ def get_train_data():
     train_df, val_df = train_test_split(df, test_size=0.2, random_state=20)
     train_df = train_df.reset_index(drop=True)
     val_df = val_df.reset_index(drop=True)
+    
+    if use_generation:
+        generated_df = pd.read_csv(generated_csv_file)
+        generated_df = generated_df.rename(columns={'Question': 'text'})
+
+        train_df = pd.concat([train_df, generated_df], ignore_index=True)
     
     train_dataset = Dataset.from_pandas(train_df)
     val_dataset = Dataset.from_pandas(val_df)

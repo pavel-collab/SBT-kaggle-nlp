@@ -6,6 +6,7 @@ import argparse
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch.nn.functional as F
 from pathlib import Path
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--pipeline', action='store_true', help='use raw pipeline to classify generationed result')
@@ -16,7 +17,12 @@ parser.add_argument('-o', '--output_path', type=str, default='./data/', help='pa
 args = parser.parse_args()
 
 # Загружаем LLM
-llm = LLM(model='Qwen/Qwen2.5-0.5B-Instruct')
+llm = LLM(model='Qwen/Qwen2.5-0.5B-Instruct',
+        #   tokenizer_mode="auto",
+        #   dtype="auto",
+          gpu_memory_utilization=0.9,
+          max_num_seqs=128,
+          max_model_len=2048)
 # llm = LLM(model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
 #           tokenizer_mode="auto",
 #           dtype="auto",
@@ -57,7 +63,7 @@ sampling_params = SamplingParams(
 outputs = llm.generate(prompt, sampling_params)
 
 accepted_samples_number = 0
-for output in outputs[0].outputs:
+for output in tqdm(outputs[0].outputs):
     #TODO полная строка генерации outputs[0].outputs[0] -- разобраться что значат эти индексы
     #TODO в генерациях остаются артефакты генерации в начале предложения, придумать, как убрать их
     generated = output.text.strip()
@@ -106,21 +112,19 @@ for output in outputs[0].outputs:
         score = propabilities[0][result_lable].detach().item()
         result = idx2labels[result_lable.detach().item()]
         
-    print(f"GENERATED RESULT:\n{generated}")
-        
-    # output_file_path = Path(args.output_path)
-    # output_file = Path(f"{output_file_path.absolute()}/{target_label.replace(' ', '-')}_generated_samples.csv")
-    # file_create = output_file.exists()
+    output_file_path = Path(args.output_path)
+    output_file = Path(f"{output_file_path.absolute()}/{target_label.replace(' ', '-')}_generated_samples.csv")
+    file_create = output_file.exists()
 
-    # if result == target_label and score > 0.7:
-    #     # clean result before insert in file
-    #     cleaned_generation = generated.replace(',', '').replace('\n', ' ')
+    if result == target_label and score > 0.7:
+        # clean result before insert in file
+        cleaned_generation = generated.replace(',', '').replace('\n', ' ')
         
-    #     with open(output_file.absolute(), 'a') as fd:
-    #         if not file_create:
-    #             fd.write("Question,label\n")
-    #         fd.write(f"{cleaned_generation},{result_lable.detach().item()}\n")
-    #     accepted_samples_number += 1
+        with open(output_file.absolute(), 'a') as fd:
+            if not file_create:
+                fd.write("Question,label\n")
+            fd.write(f"{cleaned_generation},{result_lable.detach().item()}\n")
+        accepted_samples_number += 1
 
 gc.collect()
 torch.cuda.empty_cache()
