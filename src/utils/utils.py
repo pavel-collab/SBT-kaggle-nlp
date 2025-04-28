@@ -142,7 +142,7 @@ def mask_latex_in_text(text):
     new_text += text[last_idx:]
     return new_text
     
-def get_train_data(use_generation=False):
+def get_train_data(use_generation=False, get_class_weight_flag=False):
     df = pd.read_csv(train_csv_file)
     df = df.rename(columns={'Question': 'text'})
 
@@ -162,6 +162,9 @@ def get_train_data(use_generation=False):
     train_dataset = Dataset.from_pandas(train_df)
     val_dataset = Dataset.from_pandas(val_df)
     
+    if get_class_weight_flag:
+        clw.class_weights = get_class_weights(train_df)
+    
     return train_dataset, val_dataset
 
 def get_test_data():
@@ -176,3 +179,15 @@ def get_test_data():
 def get_device():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     return device
+
+def get_class_weights(train_df):
+    # Подсчитать количество изображений в каждом классе для обучающего набора данных
+    train_class_counts = np.zeros(n_classes)
+    for idx, row in train_df.iterrows():
+        label = row['label']
+        train_class_counts[label] += 1
+        
+    # посчитаем веса для каждого класса
+    class_weights = (sum(train_class_counts.tolist()) / (n_classes * train_class_counts)).tolist()
+    class_weights = torch.tensor(class_weights)
+    return class_weights

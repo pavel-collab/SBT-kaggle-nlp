@@ -16,7 +16,8 @@ args = parser.parse_args()
 fix_random_seed()
 device = get_device()
 
-train_dataset, val_dataset = get_train_data(use_generation=args.use_generation)
+train_dataset, val_dataset = get_train_data(use_generation=args.use_generation,
+                                            get_class_weight_flag=True)
 
 try:
     for model_name in model_list:
@@ -63,7 +64,7 @@ try:
             train_dataset=tokenized_train_dataset,
             eval_dataset=tokenized_val_dataset,
             # compute_metrics=compute_metrics,
-            class_weights=class_weights.to(device)
+            class_weights=clw.class_weights.to(device)
         )
         
         try:
