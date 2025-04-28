@@ -179,7 +179,7 @@ def get_dataset(use_generation=False, get_class_weight_flag=False):
         generated_df = pd.read_csv(generated_csv_file)
         generated_df = generated_df.rename(columns={'Question': 'text'})
 
-        train_df = pd.concat([df, generated_df], ignore_index=True)
+        train_df = pd.concat([train_df, generated_df], ignore_index=True)
     
     train_dataset = Dataset.from_pandas(train_df)
     
