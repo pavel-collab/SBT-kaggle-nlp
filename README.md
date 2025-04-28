@@ -54,3 +54,22 @@ Submit result
 ```
 kaggle competitions submit -c classification-of-math-problems-by-kasut-academy -f submission.csv -m "Message"
 ```
+
+### accelerate config
+```
+compute_environment: LOCAL_MACHINE
+deepspeed_config: {}
+distributed_type: NO
+machine_rank: 0
+main_training_function: main
+num_machines: 1
+num_processes: 1
+mixed_precision: fp16  # no или fp16 / bf16, если хочешь ускорить
+use_cpu: false
+same_network: true
+```
+
+accelerate run function
+```
+accelerate launch ./src/run.py --use_generation
+```

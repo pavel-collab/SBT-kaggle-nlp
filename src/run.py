@@ -2,7 +2,8 @@ import argparse
 from utils.constants import *
 from utils.utils import (fix_random_seed,
                          get_device,
-                         get_train_data)
+                         get_train_data,
+                         print_device_info)
 from transformers import (AutoTokenizer, 
                           AutoModelForSequenceClassification, 
                           DataCollatorWithPadding,
@@ -17,7 +18,9 @@ fix_random_seed()
 device = get_device()
 
 train_dataset, val_dataset = get_train_data(use_generation=args.use_generation,
-                                            get_class_weight_flag=True)
+                                            get_class_weight_flag=False)
+
+print_device_info()
 
 try:
     for model_name in model_list:
@@ -53,6 +56,8 @@ try:
             save_steps=1000, # сохранение чекпоинтов модели каждые 1000 шагов# директория для логов TensorBoard
             logging_steps=100,
             save_total_limit=5, # Сохранять только последние 5 чекпоинтов
+            fp16=True,
+            gradient_accumulation_steps=2,
             # load_best_model_at_end=True,          # Загружать лучшую модель в конце
             # metric_for_best_model="accuracy",     # Метрика для определения "лучшей" модели
             # greater_is_better=True,                # Указать, что большее значение метрики лучше

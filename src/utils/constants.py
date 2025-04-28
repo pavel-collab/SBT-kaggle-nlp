@@ -24,6 +24,6 @@ batch_size = 8
 num_epoches = 3
 
 class ClassWeights:
-    class_weights=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    class_weights=torch.tensor([5.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
 
 clw = ClassWeights()

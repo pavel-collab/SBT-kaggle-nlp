@@ -191,3 +191,7 @@ def get_class_weights(train_df):
     class_weights = (sum(train_class_counts.tolist()) / (n_classes * train_class_counts)).tolist()
     class_weights = torch.tensor(class_weights)
     return class_weights
+
+def print_device_info():
+    print(f"[DEBUG] Torch sees ", torch.cuda.device_count(), 'GPU(s)')
+    print(f"[DEBUG] Accelerate is using device: ", torch.cuda.get_device_name(torch.cuda.current_device()))
