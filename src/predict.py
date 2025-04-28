@@ -11,12 +11,16 @@ SUBMISSION_FILE_NAME = 'submission.csv'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_path', help='set a path to the model that we want to evaluate')
+parser.add_argument('-t', '--tokenizer_path', type=str, default=None, help='set path to saved tokenizer')
 args = parser.parse_args()
 
 model_file_path = Path(args.model_path)
 assert(model_file_path.exists())
 
-tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+if args.tokenizer_path is None:
+    tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+else:
+    tokenizer_file_path = Path(args.tokenizer_path)
 assert(tokenizer_file_path.exists())
 
 model_name = model_file_path.parent.name

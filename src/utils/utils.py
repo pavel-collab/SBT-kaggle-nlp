@@ -143,6 +143,10 @@ def mask_latex_in_text(text):
     return new_text
     
 def get_train_data(use_generation=False, get_class_weight_flag=False):
+    '''
+    Можно было бы сначала формировать датасет, а потом только делить его на 
+    train и test. Но тут задумка в том, что в части для валидации нет сгенерированных данных.
+    '''
     df = pd.read_csv(train_csv_file)
     df = df.rename(columns={'Question': 'text'})
 
@@ -166,6 +170,23 @@ def get_train_data(use_generation=False, get_class_weight_flag=False):
         clw.class_weights = get_class_weights(train_df)
     
     return train_dataset, val_dataset
+
+def get_dataset(use_generation=False, get_class_weight_flag=False):
+    df = pd.read_csv(train_csv_file)
+    train_df = df.rename(columns={'Question': 'text'})
+    
+    if use_generation:
+        generated_df = pd.read_csv(generated_csv_file)
+        generated_df = generated_df.rename(columns={'Question': 'text'})
+
+        train_df = pd.concat([df, generated_df], ignore_index=True)
+    
+    train_dataset = Dataset.from_pandas(train_df)
+    
+    if get_class_weight_flag:
+        clw.class_weights = get_class_weights(train_df)
+    
+    return train_dataset
 
 def get_test_data():
     test_df = pd.read_csv(test_csv_file)
@@ -195,3 +216,4 @@ def get_class_weights(train_df):
 def print_device_info():
     print(f"[DEBUG] Torch sees ", torch.cuda.device_count(), 'GPU(s)')
     print(f"[DEBUG] Accelerate is using device: ", torch.cuda.get_device_name(torch.cuda.current_device()))
+    print()

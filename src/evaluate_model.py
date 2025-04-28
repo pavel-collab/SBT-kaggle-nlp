@@ -7,6 +7,7 @@ from utils.utils import (get_device, get_train_data,
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_path', help='set a path to the model that we want to evaluate')
+parser.add_argument('-t', '--tokenizer_path', type=str, default=None, help='set path to saved tokenizer')
 parser.add_argument('-o', '--output', help='set a path to the output filename, programm will write a model name and final accuracy')
 args = parser.parse_args()
 
@@ -18,7 +19,10 @@ else:
 model_file_path = Path(args.model_path)
 assert(model_file_path.exists())
 
-tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+if args.tokenizer_path is None:
+    tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+else:
+    tokenizer_file_path = Path(args.tokenizer_path)
 assert(tokenizer_file_path.exists())
 
 model_name = model_file_path.parent.name

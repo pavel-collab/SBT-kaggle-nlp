@@ -2,12 +2,12 @@ import torch
 
 model_list = [
     "bert-base-uncased",
-    "distilbert-base-uncased",
+    # "distilbert-base-uncased",
     # "roberta-base",
     # "albert-base-v2",
     # "xlnet-base-cased",
     # "google/electra-base-discriminator",
-    "facebook/bart-base",
+    # "facebook/bart-base",
     # "microsoft/deberta-base"
 ]
 
@@ -22,8 +22,9 @@ generated_csv_file = './data/generated/generated_train.csv'
 
 batch_size = 8
 num_epoches = 3
+num_folds = 5
 
 class ClassWeights:
-    class_weights=torch.tensor([5.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    class_weights=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
 
 clw = ClassWeights()
