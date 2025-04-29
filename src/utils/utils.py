@@ -134,6 +134,8 @@ def get_dataset(use_generation=False, get_class_weight_flag=False):
     df = pd.read_csv(train_csv_file)
     train_df = df.rename(columns={'Question': 'text'})
     
+    train_df['text'] = train_df['text'].apply(preprocess_text)
+    
     if use_generation:
         generated_df = pd.read_csv(generated_csv_file)
         generated_df = generated_df.rename(columns={'Question': 'text'})
