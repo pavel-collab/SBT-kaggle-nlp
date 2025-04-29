@@ -4,10 +4,20 @@ import emoji
 from collections import Counter
 import matplotlib.pyplot as plt
 import seaborn as sns
+import argparse
+from pathlib import Path
+from tqdm import tqdm
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--data_path', help='set path to data research .csv file')
+args = parser.parse_args()
+
+data_path = Path(args.data_path)
+assert(data_path.exists())
 
 sns.set(style="whitegrid")
 
-def overview_report(texts, top_n=20):
+def overview_report(texts, top_n=20, save_path=None):
     html_pattern = re.compile(r'<[^>]+>')
     markdown_pattern = re.compile(r'(\*\*.*?\*\*|\*.*?\*|`.*?`)')
     latex_pattern = re.compile(r'(\\begin\{.*?\}|\\end\{.*?\}|\$.*?\$|\$\$.*?\$\$)')
@@ -19,7 +29,7 @@ def overview_report(texts, top_n=20):
     length_list = []
     word_lengths = []
 
-    for text in texts:
+    for text in tqdm(texts):
         if not isinstance(text, str):
             continue
 
@@ -56,7 +66,11 @@ def overview_report(texts, top_n=20):
     plt.title("Distribution of Text Lengths")
     plt.xlabel("Length (characters)")
     plt.ylabel("Count")
-    plt.show()
+    
+    if not save_path:
+        plt.show()
+    else:
+        plt.savefig(f"{save_path}/Length_distribution.png")
 
     # Plot 2: Top-N tokens
     plt.figure(figsize=(14, 6))
@@ -66,7 +80,11 @@ def overview_report(texts, top_n=20):
     plt.title(f"Top {top_n} Most Frequent Tokens")
     plt.xlabel("Frequency")
     plt.ylabel("Token")
-    plt.show()
+    
+    if not save_path:
+        plt.show()
+    else:
+        plt.savefig(f"{save_path}/Top_n_tokens.png")
 
     # Plot 3: Text feature type distribution
     plt.figure(figsize=(7, 5))
@@ -76,7 +94,11 @@ def overview_report(texts, top_n=20):
     plt.title("Text Feature Type Distribution")
     plt.xlabel("Number of Texts")
     plt.ylabel("Feature Type")
-    plt.show()
+    
+    if not save_path:
+        plt.show()
+    else:
+        plt.savefig(f"{save_path}/feature_types.png")
 
     # Plot 4: Emoji frequency
     if emoji_counter:
@@ -87,7 +109,11 @@ def overview_report(texts, top_n=20):
         plt.title(f"Top {top_n} Most Frequent Emojis")
         plt.xlabel("Frequency")
         plt.ylabel("Emoji")
-        plt.show()
+
+        if not save_path:
+            plt.show()
+        else:
+            plt.savefig(f"{save_path}/emoji_frequency.png")
 
     # Plot 5: Word length distribution
     if word_lengths:
@@ -96,12 +122,16 @@ def overview_report(texts, top_n=20):
         plt.title("Distribution of Word Lengths")
         plt.xlabel("Word Length (characters)")
         plt.ylabel("Count")
-        plt.show()
+        
+        if not save_path:
+            plt.show()
+        else:
+            plt.savefig(f"{save_path}/word_len_distrib.png")
 
     print("Overview complete.")
     
     
-df = pd.read_csv('./data/train.csv')
+df = pd.read_csv(data_path.absolute())
 df = df.rename(columns={'Question': 'text'})
 # Применить к своему датасету:
-overview_report(df["text"])
+overview_report(df["text"], save_path='./images')

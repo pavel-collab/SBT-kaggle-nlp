@@ -16,3 +16,4 @@ openai==0.28
 vllm
 emoji==1.4.1
 PyQt5
+bs4

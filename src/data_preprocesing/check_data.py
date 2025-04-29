@@ -2,6 +2,15 @@ import pandas as pd
 import re
 import emoji
 from collections import Counter
+import argparse
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--data_path', help='set path to data research .csv file')
+args = parser.parse_args()
+
+data_path = Path(args.data_path)
+assert(data_path.exists())
 
 def analyze_texts(texts):
     html_pattern = re.compile(r'<[^>]+>')
@@ -53,7 +62,7 @@ def analyze_texts(texts):
     return stats
 
 
-df = pd.read_csv('./data/train.csv')
+df = pd.read_csv(data_path.absolute())
 df = df.rename(columns={'Question': 'text'})
 
 # допустим у тебя датафрейм df

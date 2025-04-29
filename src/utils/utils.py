@@ -12,7 +12,7 @@ import pandas as pd
 from datasets import Dataset
 from utils.constants import *
 import seaborn as sns
-import re
+from data_preprocesing.utils import preprocess_text
 
 def compute_metrics(eval_preds):
     logits, labels = eval_preds
@@ -102,46 +102,6 @@ def fix_random_seed(seed=20):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = False
     
-'''
-Функция для маскирования. Мы будем маскировать математические выражениея в тексте, чтобы
-помочь модели лучше распознавать контекст вокруг математических выражений и сами математические
-выражеия.
-'''
-def clean_math_text(text):
-    # Preserve mathematical notation
-    text = re.sub(r'\$(.*?)\$', r' [MATH] \1 [MATH] ', text)
-    text = re.sub(r'\\\w+', lambda m: ' ' + m.group(0) + ' ', text)
-    return text.strip()
-
-def mask_latex_in_text(text):
-    environments = ["equation", "equation*", "align", "align*", "multline", "multline*", "eqnarray", "eqnarray*"]
-    patterns = []
-
-    for env in environments:
-        patterns.append(rf'\\begin\{{{env}\}}.*?\\end\{{{env}\}}')  # безопасное построение шаблона
-
-    # Добавим остальные форматы
-    patterns += [
-        r'\$\$.*?\$\$',             # $$...$$
-        r'(?<!\$)\$(?!\$).*?(?<!\$)\$(?!\$)'  # $...$
-    ]
-
-    combined_pattern = '|'.join(f'({p})' for p in patterns)
-    matches = list(re.finditer(combined_pattern, text, re.DOTALL))
-
-    new_text = ""
-    last_idx = 0
-
-    for i, match in enumerate(matches):
-        start, end = match.span()
-        new_text += text[last_idx:start]
-        # new_text += f"[LATEX]"
-        new_text += f"[MATH]"
-        last_idx = end
-
-    new_text += text[last_idx:]
-    return new_text
-    
 def get_train_data(use_generation=False, get_class_weight_flag=False):
     '''
     Можно было бы сначала формировать датасет, а потом только делить его на 
@@ -149,9 +109,8 @@ def get_train_data(use_generation=False, get_class_weight_flag=False):
     '''
     df = pd.read_csv(train_csv_file)
     df = df.rename(columns={'Question': 'text'})
-
-    # df['text'] = df['text'].apply(clean_math_text)
-    # df['text'] = df['text'].apply(mask_latex_in_text)
+    
+    df['text'] = df['text'].apply(preprocess_text)
 
     train_df, val_df = train_test_split(df, test_size=0.2, random_state=20)
     train_df = train_df.reset_index(drop=True)
