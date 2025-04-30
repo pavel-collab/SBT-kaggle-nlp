@@ -73,3 +73,16 @@ accelerate run function
 ```
 accelerate launch ./src/run.py --use_generation
 ```
+
+### Препроцессниг данных
+
+Перед препроцессингом хорошо бы исследовать данные на то, какие необычные ньюансы в них могут содержаться. Есть ли там html, 
+latex, ссылки, email адреса, какая средняя длина токенов и т д. Для этого приготовлены 2 специальных скрипта
+```
+python3 ./src/data_preprocesing/check_data.py -d ./data/train.csv
+```
+выведет общую информацию о датасете.
+```
+python3 ./src/data_preprocesing/data_feature_visualize.py -d ./data/train.csv
+```
+сделает графики с информацией о специфических фичах в данных.

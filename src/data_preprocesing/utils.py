@@ -60,7 +60,10 @@ def preprocess_text(text):
     # --- Базовая предобработка ---
 
     # Удаление HTML-тегов
-    text = BeautifulSoup(text, "html.parser").get_text()
+    # text = BeautifulSoup(text, "html.parser").get_text()
+    
+    # вместо удаления html текста, мы можем его маскировать
+    text = re.sub(r'<[^>]+>', '[HTML]', text)
 
     # Приведение к нижнему регистру
     text = text.lower()
