@@ -67,10 +67,7 @@ try:
                 logging_steps=100,
                 save_total_limit=5, # Сохранять только последние 5 чекпоинтов
                 fp16=True,
-                gradient_accumulation_steps=2,
-                # load_best_model_at_end=True,          # Загружать лучшую модель в конце
-                # metric_for_best_model="accuracy",     # Метрика для определения "лучшей" модели
-                # greater_is_better=True,                # Указать, что большее значение метрики лучше
+                gradient_accumulation_steps=2
             )
             
             trainer = CustomTrainer(

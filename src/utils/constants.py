@@ -2,7 +2,7 @@ import torch
 
 model_list = [
     "bert-base-uncased",
-    # "distilbert-base-uncased",
+    "distilbert-base-uncased",
     # "roberta-base",
     # "albert-base-v2",
     # "xlnet-base-cased",
