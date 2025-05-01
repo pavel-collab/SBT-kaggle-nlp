@@ -6,11 +6,12 @@ from sklearn.linear_model import LogisticRegression
 import torch
 import torch.nn as nn
 import numpy as np
-from utils.utils import get_train_data
+from utils.utils import get_train_data, get_device
 import json
 from utils.hybrid_model import HybridModelHF
 from utils.custom_text_datset import CustomTextDataset
 from utils.constants import *
+from utils.custom_trainer import CustomTrainer
 
 #TODO: move to constants
 label2idx ={
@@ -24,6 +25,8 @@ label2idx ={
     "Abstract Algebra and Topology": 7
 }
 
+device = get_device()
+
 # === МЕТРИКИ ===
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
@@ -34,7 +37,9 @@ def compute_metrics(eval_pred):
 model_name = 'bert-base-uncased'
 
 # === ПОДГОТОВКА ===
-train_dataset, val_dataset = get_train_data(use_generation=True)
+train_dataset, val_dataset = get_train_data(use_generation=True, get_class_weight_flag=True)
+
+print(f"[DEBUG] class weights: {clw.class_weights}")
 
 train_texts, train_labels = train_dataset['text'], train_dataset['label']
 val_texts, val_labels = val_dataset['text'], val_dataset['label']
@@ -94,13 +99,13 @@ training_args = TrainingArguments(
 
 model = HybridModelHF(num_labels=len(label2idx), extra_feat_dim=top_n)
 
-#TODO: here we can use CustomTrainer
-trainer = Trainer(
+trainer = CustomTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
-    tokenizer=tokenizer,  # чтобы Trainer сохранял токенайзер
+    # compute_metrics=compute_metrics,
+    class_weights=clw.class_weights.to(device),
     compute_metrics=compute_metrics,
 )
 
