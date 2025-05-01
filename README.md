@@ -93,3 +93,22 @@ python3 ./src/data_preprocesing/data_feature_visualize.py -d ./data/train.csv
 модели, а так же показывает, на сколько сложна задача и какой уровень точности можно ожидать от классификатора.
 
 Кроме того tf-idf помогает выделить наиболее релевантные фичи в текстах для каждого класса.
+
+### Использование tf-idf для подсказок
+
+Запускаем скрипт 
+```
+python3 ./src/extract_features.py
+```
+этот скрипт извлечет наиболее релевантные токены для каждого класса и запишет их в json файл
+
+Затем запускаем 
+```
+accelerate launch ./src/tfidf_classifier.py
+```
+
+Заметим, что для моделей, обученных через этот скрипт скрипты валидации и инференса нужно запускать с флагом -u
+```
+python3 ./src/evaluate_model.py -m <path_to_model> -t <path_to+tokenizer> -u
+python3 ./src/predict.py -m <path_to_model> -t <path_to+tokenizer> -u
+```
