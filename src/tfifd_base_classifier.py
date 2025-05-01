@@ -4,26 +4,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
-import argparse
-from pathlib import Path
-# from ..utils.constants import train_csv_file
+from utils.utils import get_train_data
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--data_path', help='set path to data research .csv file')
-args = parser.parse_args()
+train_dataset, val_dataset = get_train_data(use_generation=True)
 
-train_csv_file = Path(args.data_path)
-assert(train_csv_file.exists())
-
-df = pd.read_csv(train_csv_file.absolute())
-df = df.rename(columns={'Question': 'text'})
-
-train_df, val_df = train_test_split(df, test_size=0.2, random_state=20)
-train_df = train_df.reset_index(drop=True)
-val_df = val_df.reset_index(drop=True)
-
-X_train, y_train = train_df['text'], train_df['label']
-X_valid, y_valid = val_df['text'], val_df['label']
+X_train, y_train = train_dataset['text'], train_dataset['label']
+X_valid, y_valid = val_dataset['text'], val_dataset['label']
 
 # TF-IDF по словам
 word_vectorizer = TfidfVectorizer(

@@ -1,9 +1,11 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 import numpy as np
-import pandas as pd
-import argparse
-from pathlib import Path
+from utils.utils import get_train_data
+
+train_dataset, _ = get_train_data(use_generation=True)
+
+texts, labels = train_dataset['text'], train_dataset['label']
 
 idx2labels ={
     0: "Algebra", 
@@ -15,18 +17,6 @@ idx2labels ={
     6: "Linear Algebra", 
     7: "Abstract Algebra and Topology"
 }
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--data_path', help='set path to data research .csv file')
-args = parser.parse_args()
-
-train_csv_file = Path(args.data_path)
-assert(train_csv_file.exists())
-
-df = pd.read_csv(train_csv_file.absolute())
-df = df.rename(columns={'Question': 'text'})
-
-texts, labels = df['text'], df['label']
 
 # 1. Векторизация текста
 vectorizer = TfidfVectorizer(
