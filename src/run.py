@@ -34,18 +34,18 @@ skf = StratifiedKFold(n_splits=num_folds,
 
 try:
     for model_name in model_list:
+        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+        data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
+
+        model.to(device)
+        
         for fold, (train_idx, val_idx) in enumerate(skf.split(X=texts, y=labels)):
             print(f"FOLD {fold}/{num_folds}")
 
             train_dtst = train_dataset.select(train_idx)
             val_dtst  = train_dataset.select(val_idx)
-            
-            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-            data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
-
-            model.to(device)
             
             # Токенизация данных
             def tokenize_function(examples):
