@@ -99,13 +99,12 @@ training_args = TrainingArguments(
 
 model = HybridModelHF(num_labels=len(label2idx), extra_feat_dim=top_n)
 
-trainer = CustomTrainer(
+trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
-    # compute_metrics=compute_metrics,
-    class_weights=clw.class_weights.to(device),
+    tokenizer=tokenizer,  # чтобы Trainer сохранял токенайзер
     compute_metrics=compute_metrics,
 )
 

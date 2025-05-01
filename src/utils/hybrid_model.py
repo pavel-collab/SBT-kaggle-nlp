@@ -5,12 +5,7 @@ from safetensors.torch import load_file
 
 class HybridModelHF(nn.Module):
     def __init__(self, num_labels, extra_feat_dim, model_path_str=None):
-        super().__init__()
-        # if model_path_str is not None:
-        #     self.bert = BertModel.from_pretrained(model_path_str)
-        # else:
-        #     self.bert = BertModel.from_pretrained('bert-base-uncased')
-            
+        super().__init__()            
         self.bert = BertModel.from_pretrained('bert-base-uncased')
         self.dropout = nn.Dropout(0.3)
         self.classifier = nn.Linear(self.bert.config.hidden_size + extra_feat_dim, num_labels)
