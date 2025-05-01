@@ -1,0 +1,98 @@
+{
+    "Algebra": [
+        "num",
+        "real",
+        "solve",
+        "real numbers",
+        "roots",
+        "polynomial latex_start",
+        "polynomial",
+        "is num",
+        "num for",
+        "speed"
+    ],
+    "Geometry and Trigonometry": [
+        "triangle",
+        "angle",
+        "circle",
+        "angles",
+        "cos",
+        "area",
+        "tan",
+        "sin",
+        "point latex_start",
+        "area of"
+    ],
+    "Calculus and Analysis": [
+        "function",
+        "derivative",
+        "frac",
+        "the function",
+        "calculus",
+        "ln",
+        "dx",
+        "the derivative",
+        "real",
+        "derivative of"
+    ],
+    "Probability and Statistics": [
+        "probability",
+        "the probability",
+        "probability that",
+        "random",
+        "probability of",
+        "randomly",
+        "distribution",
+        "average",
+        "expected",
+        "the expected"
+    ],
+    "Number Theory": [
+        "integer",
+        "integers",
+        "natural",
+        "prime",
+        "digit",
+        "number",
+        "digits",
+        "find all",
+        "divisors",
+        "prime numbers"
+    ],
+    "Combinatorics and Discrete Math": [
+        "each",
+        "different",
+        "number of",
+        "how many",
+        "digits",
+        "many",
+        "set latex_start",
+        "binom",
+        "integers",
+        "are"
+    ],
+    "Linear Algebra": [
+        "matrix",
+        "vector",
+        "linear",
+        "vectors",
+        "linear algebra",
+        "the matrix",
+        "mathbf",
+        "vec",
+        "num for",
+        "equations"
+    ],
+    "Abstract Algebra and Topology": [
+        "group",
+        "element",
+        "topology",
+        "ring",
+        "mathbb",
+        "abstract",
+        "is",
+        "abstract algebra",
+        "order",
+        "subgroup"
+    ]
+}

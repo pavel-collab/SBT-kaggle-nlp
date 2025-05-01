@@ -1,4 +1,4 @@
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, BertConfig
 import argparse
 from pathlib import Path
 import torch
@@ -7,12 +7,13 @@ from utils.utils import get_test_data
 import pandas as pd
 from utils.constants import *
 from transformers import BertTokenizer
-from utils.hybrid_model import HybridModelHF
-from utils.custom_text_datset import InferenceDataset
+from utils.hybrid_model import HybridModelHF, BertWithHints
+from utils.custom_text_datset import InferenceDataset, InferenceDatasetWithHints
 import json
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import torch.nn.functional as F
 
 SUBMISSION_FILE_NAME = 'submission.csv'
 
@@ -33,6 +34,18 @@ label2idx ={
     "Abstract Algebra and Topology": 7
 }
 
+idx2labels ={
+    0: "Algebra", 
+    1: "Geometry and Trigonometry", 
+    2: "Calculus and Analysis",
+    3: "Probability and Statistics", 
+    4: "Number Theory", 
+    5: "Combinatorics and Discrete Math",
+    6: "Linear Algebra", 
+    7: "Abstract Algebra and Topology"
+}
+
+
 model_file_path = Path(args.model_path)
 assert(model_file_path.exists())
 
@@ -47,8 +60,11 @@ model_name = model_file_path.parent.name
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 if args.use_hybrid:
-    tokenizer = BertTokenizer.from_pretrained(tokenizer_file_path.absolute())
-    model = HybridModelHF(num_labels=len(label2idx), extra_feat_dim=50, model_path_str=model_file_path.absolute())
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
+    config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
+    #TODO: set hint features according to the data from json file
+    model = BertWithHints(config=config, num_hint_features=76) #! change hint features number
+    
     state_dict = load_file(f"{model_file_path.absolute()}/model.safetensors")
     model.load_state_dict(state_dict=state_dict)
 else:
@@ -63,11 +79,13 @@ model.eval()
 test_dataset = get_test_data()
 
 if args.use_hybrid:    
-    with open(f"{model_file_path.parent.parent.absolute()}/top_features.json", 'r') as file:
-        top_features = set(json.load(file))
+    # Чтение данных из JSON файла
+    with open('top_features.json', 'r') as json_file:
+        important_words = json.load(json_file)
     
     test_texts = test_dataset['text']
-    tokenized_test_dataset = InferenceDataset(test_texts, tokenizer, top_features)
+    # tokenized_test_dataset = InferenceDatasetWithHints(test_texts, tokenizer, important_words, idx2labels)
+    tokenized_test_dataset = InferenceDatasetWithHints(test_texts, tokenizer, important_words, classes_list)
 else:
     # Токенизация данных
     def tokenize_function(examples):
@@ -77,36 +95,19 @@ else:
 
 loader = DataLoader(tokenized_test_dataset, batch_size=16)
 
-# predicted_trainer = Trainer(
-#     model=model,
-#     eval_dataset=tokenized_test_dataset,
-# )
-
-# with torch.no_grad():
-#     # Получение предсказаний
-#     predictions = predicted_trainer.predict(tokenized_test_dataset)
-
-# #! in some models predictions.predictions is a complex tupple, not a numpy array 
-# if isinstance(predictions.predictions, tuple):
-#     target_predictions = predictions.predictions[0]
-# else:
-#     target_predictions = predictions.predictions
-
-# preds = np.argmax(target_predictions, axis=-1)
-
 # === Предсказание ===
 preds = []
 
 with torch.no_grad():
-    for batch in tqdm(loader):
-        inputs = {
-            'input_ids':      batch['input_ids'].to(device),
-            'attention_mask': batch['attention_mask'].to(device),
-            'extra_features': batch['extra_features'].to(device)
-        }
-        outputs = model(**inputs)
-        batch_preds = torch.argmax(outputs['logits'], dim=1)
-        preds.extend(batch_preds.cpu().tolist())
+    for batch in loader:
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        hint_features = batch['hint_features'].to(device)
+
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask, hint_features=hint_features)
+        logits = outputs['logits']
+        batch_preds = torch.argmax(F.softmax(logits, dim=1), dim=1)
+        preds.extend(batch_preds.tolist())
 
 df = pd.DataFrame(preds, columns=['label'])
 

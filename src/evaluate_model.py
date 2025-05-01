@@ -1,12 +1,12 @@
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, BertConfig
 import argparse
 from pathlib import Path
 from utils.constants import *
 from utils.utils import (get_device, get_train_data,
                          evaleate_model, plot_confusion_matrix)
 from transformers import BertTokenizer
-from utils.hybrid_model import HybridModelHF
-from utils.custom_text_datset import CustomTextDataset
+from utils.hybrid_model import HybridModelHF, BertWithHints
+from utils.custom_text_datset import CustomTextDataset, MathTextDataset
 import json
 from safetensors.torch import load_file
 
@@ -26,6 +26,17 @@ label2idx ={
     "Combinatorics and Discrete Math": 5,
     "Linear Algebra": 6, 
     "Abstract Algebra and Topology": 7
+}
+
+idx2labels ={
+    0: "Algebra", 
+    1: "Geometry and Trigonometry", 
+    2: "Calculus and Analysis",
+    3: "Probability and Statistics", 
+    4: "Number Theory", 
+    5: "Combinatorics and Discrete Math",
+    6: "Linear Algebra", 
+    7: "Abstract Algebra and Topology"
 }
 
 if args.output is not None and args.output != "":
@@ -48,8 +59,12 @@ model_name = model_file_path.parent.name
 device = get_device()
 
 if args.use_hybrid:
-    tokenizer = BertTokenizer.from_pretrained(tokenizer_file_path.absolute())
-    model = HybridModelHF(num_labels=len(label2idx), extra_feat_dim=50, model_path_str=model_file_path.absolute())
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
+    config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
+    #TODO: set hint features according to the data from json file
+    model = BertWithHints(config=config, num_hint_features=76) #! change hint features number
+    
+    # set model pretrained weights
     state_dict = load_file(f"{model_file_path.absolute()}/model.safetensors")
     model.load_state_dict(state_dict=state_dict)
 else:
@@ -63,23 +78,12 @@ model.to(device)
 _, val_dataset = get_train_data()
 
 if args.use_hybrid:
-    #TODO: move to utils
-    def encode_data(texts, top_words):
-        enc = tokenizer(texts, truncation=True, padding='max_length', max_length=128, return_tensors='pt')
-        extra_feats = []
-        for text in texts:
-            tokens = set(text.lower().split())
-            feats = [1.0 if word in tokens else 0.0 for word in top_words]
-            extra_feats.append(feats)
-        enc['extra_features'] = torch.tensor(extra_feats, dtype=torch.float)
-        return enc
-    
-    with open(f"{model_file_path.parent.parent.absolute()}/top_features.json", 'r') as file:
-        top_features = set(json.load(file))
-    
+    # Чтение данных из JSON файла
+    with open('top_features.json', 'r') as json_file:
+        important_words = json.load(json_file)
+        
     val_texts, val_labels = val_dataset['text'], val_dataset['label']
-    val_enc = encode_data(val_texts, top_features)
-    tokenized_val_dataset = CustomTextDataset(val_enc, torch.tensor(val_labels))
+    tokenized_val_dataset = MathTextDataset(val_texts, val_labels, tokenizer, important_words, classes_list)
     true_labels = val_labels
 else:
     # Токенизация данных
