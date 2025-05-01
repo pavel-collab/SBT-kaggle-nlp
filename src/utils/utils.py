@@ -32,7 +32,7 @@ def compute_metrics(eval_preds):
         'f1_macro': validation_f1_macro
     }
     
-def evaleate_model(model, trainer, tokenized_val_dataset, device):
+def evaleate_model(model, trainer, tokenized_val_dataset, true_labels, device):
     model.to(device)
     model.eval()
     predictions = trainer.predict(tokenized_val_dataset)
@@ -44,12 +44,11 @@ def evaleate_model(model, trainer, tokenized_val_dataset, device):
         target_predictions = predictions.predictions
     
     preds = np.argmax(target_predictions, axis=-1)
-    true_lables = tokenized_val_dataset['label']
-    cm = confusion_matrix(true_lables, preds)
-    report = classification_report(true_lables, preds)
+    cm = confusion_matrix(true_labels, preds)
+    report = classification_report(true_labels, preds)
     accuracy = np.sum(np.diag(cm)) / np.sum(cm)
     # Вычисление взвешенной F1-меры для текущей модели
-    micro_f1 = f1_score(true_lables, preds, average='micro')
+    micro_f1 = f1_score(true_labels, preds, average='micro')
     return cm, report, accuracy, micro_f1
 
 def plot_confusion_matrix(cm, classes, model_name=None, save_file_path=None):
