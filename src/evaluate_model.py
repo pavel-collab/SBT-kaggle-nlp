@@ -46,11 +46,11 @@ else:
 model_file_path = Path(args.model_path)
 assert(model_file_path.exists())
 
-if args.tokenizer_path is None:
-    tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
-else:
-    tokenizer_file_path = Path(args.tokenizer_path)
-assert(tokenizer_file_path.exists())
+# if args.tokenizer_path is None:
+#     tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+# else:
+#     tokenizer_file_path = Path(args.tokenizer_path)
+# assert(tokenizer_file_path.exists())
 
 model_name = model_file_path.parent.name
 
@@ -58,7 +58,7 @@ model_name = model_file_path.parent.name
 device = get_device()
 
 if args.use_hybrid:
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
     #TODO: set hint features according to the data from json file
     model = BertWithFocalLoss(config=config)
@@ -66,11 +66,11 @@ if args.use_hybrid:
     # set model pretrained weights
     state_dict = load_file(f"{model_file_path.absolute()}/model.safetensors")
     model.load_state_dict(state_dict=state_dict)
-else:
-    # Загрузка токенизатора
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
-    # Загрузка модели
-    model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute(), num_labels=n_classes)
+# else:
+#     # Загрузка токенизатора
+#     tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
+#     # Загрузка модели
+#     model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute(), num_labels=n_classes)
 
 model.to(device)
 
@@ -93,7 +93,6 @@ try:
     cm, validation_report, accuracy, micro_f1 = evaleate_model(model, 
                                                                baseline_trainer, 
                                                                tokenized_val_dataset, 
-                                                               true_labels, 
                                                                device)
     print("Metrics for current model:")
     print(f'Test accuracy: {accuracy:.4f}')

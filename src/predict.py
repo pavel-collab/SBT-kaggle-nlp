@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torch.nn.functional as F
 from utils.model import BertWithFocalLoss
+from torch.utils.data import Dataset
 
 SUBMISSION_FILE_NAME = 'submission.csv'
 
@@ -44,22 +45,41 @@ idx2labels ={
     7: "Abstract Algebra and Topology"
 }
 
+class InferenceDataset(Dataset):
+    def __init__(self, texts, tokenizer):
+        self.encodings = tokenizer(
+            texts,
+            truncation=True,
+            padding='max_length',
+            max_length=128,
+            return_tensors='pt'
+        )
+        self.texts = texts
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, idx):
+        return {
+            'input_ids': self.encodings['input_ids'][idx],
+            'attention_mask': self.encodings['attention_mask'][idx],
+        }
 
 model_file_path = Path(args.model_path)
 assert(model_file_path.exists())
 
-if args.tokenizer_path is None:
-    tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
-else:
-    tokenizer_file_path = Path(args.tokenizer_path)
-assert(tokenizer_file_path.exists())
+# if args.tokenizer_path is None:
+#     tokenizer_file_path = Path(f"{model_file_path.parent.absolute()}/tokenizer")
+# else:
+#     tokenizer_file_path = Path(args.tokenizer_path)
+# assert(tokenizer_file_path.exists())
 
 model_name = model_file_path.parent.name
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 if args.use_hybrid:
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
     #TODO: set hint features according to the data from json file
     model = BertWithFocalLoss(config=config)
@@ -67,11 +87,11 @@ if args.use_hybrid:
     # set model pretrained weights
     state_dict = load_file(f"{model_file_path.absolute()}/model.safetensors")
     model.load_state_dict(state_dict=state_dict)
-else:
-    # Загрузка токенизатора
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
-    # Загрузка модели
-    model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute(), num_labels=n_classes)
+# else:
+#     # Загрузка токенизатора
+#     tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
+#     # Загрузка модели
+#     model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute(), num_labels=n_classes)
 
 model.to(device)
 model.eval()
@@ -79,23 +99,24 @@ model.eval()
 test_dataset = get_test_data()
 
 # Токенизация данных
-def tokenize_function(examples):
-    return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
+# def tokenize_function(examples):
+    # return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
 
-tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
+# tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
+test_texts = test_dataset['text']
+tokenized_test_dataset = InferenceDataset(test_texts, tokenizer)
 loader = DataLoader(tokenized_test_dataset, batch_size=16)
 
 # === Предсказание ===
 preds = []
 
 with torch.no_grad():
-    for batch in loader:
+    for batch in tqdm(loader):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
-        hint_features = batch['hint_features'].to(device)
 
-        outputs = model(input_ids=input_ids, attention_mask=attention_mask, hint_features=hint_features)
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
         logits = outputs['logits']
         batch_preds = torch.argmax(F.softmax(logits, dim=1), dim=1)
         preds.extend(batch_preds.tolist())
