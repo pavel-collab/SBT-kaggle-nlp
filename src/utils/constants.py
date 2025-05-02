@@ -1,14 +1,16 @@
 import torch
 
 model_list = [
-    "bert-base-uncased",
+    # "bert-base-uncased",
     # "distilbert-base-uncased",
     # "roberta-base",
     # "albert-base-v2",
     # "xlnet-base-cased",
     # "google/electra-base-discriminator",
     # "facebook/bart-base",
-    # "microsoft/deberta-base"
+    # "microsoft/deberta-base",
+    "tbs17/MathBERT",
+    
 ]
 
 classes_list = ["Algebra", "Geometry and Trigonometry", "Calculus and Analysis",
