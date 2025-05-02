@@ -7,11 +7,12 @@ from utils.utils import (fix_random_seed,
 from transformers import (AutoTokenizer, 
                           AutoModelForSequenceClassification, 
                           DataCollatorWithPadding,
-                          Trainer, TrainingArguments)
+                          Trainer, TrainingArguments, BertConfig)
 from utils.custom_trainer import CustomTrainer
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 from torch.utils.data import Dataset
+from utils.model import BertWithFocalLoss
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--use_generation', action='store_true', help='if we using generation data for train')
@@ -34,10 +35,9 @@ skf = StratifiedKFold(n_splits=num_folds,
 
 try:
     for model_name in model_list:
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-        data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+        config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(classes_list))
+        model = BertWithFocalLoss(config=config)
 
         model.to(device)
         
@@ -55,28 +55,23 @@ try:
             tokenized_val_dataset = val_dtst.map(tokenize_function, batched=True)
             
             training_args = TrainingArguments(
-                output_dir=f"./results/{model_name.replace('/', '-')}_results_fold_{fold}",
-                evaluation_strategy="steps",
-                learning_rate=2e-5,
-                per_device_train_batch_size=batch_size,
-                per_device_eval_batch_size=batch_size,
-                num_train_epochs=num_epoches,
-                weight_decay=0.01,
-                logging_dir=f"./logs/{model_name.replace('/', '-')}_logs_fold_{fold}",  
-                save_steps=1000, # сохранение чекпоинтов модели каждые 1000 шагов# директория для логов TensorBoard
+                output_dir="./results",
+                per_device_train_batch_size=16,
+                per_device_eval_batch_size=32,
+                evaluation_strategy="epoch",
+                save_strategy="epoch",
+                logging_dir="./logs",
+                num_train_epochs=3,
                 logging_steps=100,
-                save_total_limit=5, # Сохранять только последние 5 чекпоинтов
-                fp16=True,
-                gradient_accumulation_steps=2
+                load_best_model_at_end=True,
             )
-            
-            trainer = CustomTrainer(
+
+            trainer = Trainer(
                 model=model,
                 args=training_args,
                 train_dataset=tokenized_train_dataset,
                 eval_dataset=tokenized_val_dataset,
-                # compute_metrics=compute_metrics,
-                class_weights=clw.class_weights.to(device)
+                tokenizer=tokenizer,
             )
             
             try:
