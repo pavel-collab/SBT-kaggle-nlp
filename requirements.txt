@@ -6,7 +6,7 @@ seaborn
 matplotlib
 transformers==4.38.0
 datasets
-accelerate==0.27.2
+accelerate==0.32.0
 tensorboard
 openai==0.28
 vllm
@@ -17,3 +17,5 @@ vllm
 emoji==1.4.1
 PyQt5
 bs4
+peft==0.10.0
+bitsandbytes

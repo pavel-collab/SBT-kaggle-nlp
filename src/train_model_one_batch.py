@@ -5,6 +5,7 @@ import pandas as pd
 from datasets import Dataset
 import argparse
 import torch
+from utils.models.model import CustomRobertaClassifier
 
 parser = argparse.ArgumentParser(description="Пример работы с argparse.")
 
@@ -32,17 +33,13 @@ def main():
     # Загрузка токенизатора
     model_name = args.model
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-    except Exception as ex:
-        print(f"There are troubles during importing tokenizer for model {model_name}: {ex}")
-        return
-        
-    try:
         # Загрузка модели
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
+        model = CustomRobertaClassifier(model_name, num_labels=n_classes)
     except Exception as ex:
         print(f"There are troubles during importing model artifacts for model {model_name}: {ex}")
         return
+    
+    tokenizer = model.tokenizer
 
     model.to(device)
 
@@ -58,7 +55,7 @@ def main():
 
     # Токенизация
     def tokenize_function(examples):
-        return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
+        return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=128)
 
     tokenized_train = train_dataset.map(tokenize_function, batched=True)
     tokenized_val = train_dataset.map(tokenize_function, batched=True)

@@ -6,6 +6,7 @@ import numpy as np
 from utils.utils import get_test_data
 import pandas as pd
 from utils.constants import *
+from utils.models.model import CustomRobertaClassifier
 
 SUBMISSION_FILE_NAME = 'submission.csv'
 
@@ -27,10 +28,12 @@ model_name = model_file_path.parent.name
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Загрузка токенизатора
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
 # Загрузка модели
-model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute())
+model = CustomRobertaClassifier(num_labels=n_classes)
+model.load_state_dict(torch.load(f"{model_file_path.absolute()}/pytorch_model.bin"))
+
+# Загрузка токенизатора
+tokenizer = model.tokenizer
 
 model.to(device)
 model.eval()

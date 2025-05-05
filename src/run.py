@@ -12,6 +12,8 @@ from utils.custom_trainer import CustomTrainer
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 from torch.utils.data import Dataset
+from utils.models.model import CustomRobertaClassifier
+import gc
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--use_generation', action='store_true', help='if we using generation data for train')
@@ -33,11 +35,9 @@ skf = StratifiedKFold(n_splits=num_folds,
                       random_state=42)
 
 try:
-    for model_name in model_list:
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-        data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
+    for model_name in large_model_list:
+        model = CustomRobertaClassifier(model_name, num_labels=n_classes)
+        tokenizer = model.tokenizer
 
         model.to(device)
         
@@ -49,7 +49,7 @@ try:
             
             # Токенизация данных
             def tokenize_function(examples):
-                return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
+                return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=32)
 
             tokenized_train_dataset = train_dtst.map(tokenize_function, batched=True)
             tokenized_val_dataset = val_dtst.map(tokenize_function, batched=True)
@@ -66,23 +66,36 @@ try:
                 save_steps=1000, # сохранение чекпоинтов модели каждые 1000 шагов# директория для логов TensorBoard
                 logging_steps=100,
                 save_total_limit=5, # Сохранять только последние 5 чекпоинтов
-                fp16=True,
-                gradient_accumulation_steps=2
+                # fp16=True,
+                gradient_accumulation_steps=8,
+                max_grad_norm=0.3 # gradient cliping
             )
+            #! There is some trouble with Custom trainer with using new model
+            # trainer = CustomTrainer(
+            #     model=model,
+            #     args=training_args,
+            #     train_dataset=tokenized_train_dataset,
+            #     eval_dataset=tokenized_val_dataset,
+            #     # compute_metrics=compute_metrics,
+            #     class_weights=clw.class_weights.to(device)
+            # )
             
-            trainer = CustomTrainer(
+            trainer = Trainer(
                 model=model,
                 args=training_args,
                 train_dataset=tokenized_train_dataset,
                 eval_dataset=tokenized_val_dataset,
                 # compute_metrics=compute_metrics,
-                class_weights=clw.class_weights.to(device)
+                # class_weights=clw.class_weights.to(device)
             )
             
             try:
                 trainer.train()
             except Exception as ex:
                 print(f"[ERROR] with training {model_name}: {ex}")
+                
+            gc.collect()
+            torch.cuda.empty_cache()
                 
         tokenizer.save_pretrained(f"./results/{model_name.replace('/', '-')}_results/tokenizer")
 except KeyboardInterrupt:
