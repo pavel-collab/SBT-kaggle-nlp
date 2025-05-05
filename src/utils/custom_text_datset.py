@@ -113,3 +113,69 @@ class InferenceDatasetWithHints(Dataset):
 
     def __len__(self):
         return len(self.texts)
+    
+class MathTextWithAttentionHints(Dataset):
+    def __init__(self, texts, labels, tokenizer, important_words_dict, label2str):
+        self.texts = texts
+        self.labels = labels
+        self.tokenizer = tokenizer
+        self.important_words_dict = important_words_dict
+        self.label2str = label2str
+
+    def __getitem__(self, idx):
+        text = self.texts[idx]
+        label = self.labels[idx]
+        encoding = self.tokenizer(text, padding='max_length', truncation=True, max_length=128, return_tensors='pt')
+        input_ids = encoding['input_ids'].squeeze()
+        attention_mask = encoding['attention_mask'].squeeze()
+        tokens = self.tokenizer.convert_ids_to_tokens(input_ids)
+
+        important = self.important_words_dict[self.label2str[label]]
+        hint_mask = torch.tensor([1 if any(w in t.lower() for w in important) else 0 for t in tokens])
+
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'hint_mask': hint_mask,
+            'labels': torch.tensor(label)
+        }
+
+    def __len__(self):
+        return len(self.texts)
+    
+class InferenceDatasetWithAttentionHints(Dataset):
+    def __init__(self, texts, tokenizer, hint_vocab, max_length=128):
+        """
+        texts       — список текстов для классификации
+        tokenizer   — токенизатор (например, от BERT)
+        hint_vocab  — список всех ключевых слов, общий с обучением
+        max_length  — максимальная длина входной последовательности
+        """
+        self.texts = texts
+        self.tokenizer = tokenizer
+        self.hint_vocab = hint_vocab
+        self.max_length = max_length
+
+    def extract_hint_features(self, text):
+        tokens = self.tokenizer.tokenize(text.lower())
+        return [1 if any(hint in token for token in tokens) else 0 for hint in self.hint_vocab]
+
+    def __getitem__(self, idx):
+        text = self.texts[idx]
+        encoded = self.tokenizer(
+            text,
+            truncation=True,
+            padding='max_length',
+            max_length=self.max_length,
+            return_tensors='pt'
+        )
+        hint_features = self.extract_hint_features(text)
+
+        return {
+            'input_ids': encoded['input_ids'].squeeze(0),         # [seq_len]
+            'attention_mask': encoded['attention_mask'].squeeze(0),  # [seq_len]
+            'hint_features': torch.tensor(hint_features, dtype=torch.float)  # [len(hint_vocab)]
+        }
+
+    def __len__(self):
+        return len(self.texts)

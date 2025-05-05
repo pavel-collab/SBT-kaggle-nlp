@@ -8,12 +8,12 @@ import torch.nn as nn
 import numpy as np
 from utils.utils import get_train_data, get_device, get_dataset
 import json
-from utils.hybrid_model import HybridModelHF, BertWithHints 
-from utils.custom_text_datset import CustomTextDataset, MathTextDataset
+from utils.hybrid_model import HybridModelHF, BertWithHints, BertWithAttentionHints
+from utils.custom_text_datset import CustomTextDataset, MathTextDataset, MathTextWithAttentionHints
 from utils.constants import *
 from utils.custom_trainer import CustomTrainer
 from sklearn.model_selection import StratifiedKFold
-from utils.datacollarator import DataCollatorWithHints
+from utils.datacollarator import DataCollatorWithHints, DataCollatorWithHintMask
 
 #TODO: move to constants
 label2idx ={
@@ -64,7 +64,7 @@ skf = StratifiedKFold(n_splits=num_folds,
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
 #TODO: set hint features according to the data from json file
-model = BertWithHints(config=config, num_hint_features=76) #! change hint features number
+model = BertWithAttentionHints(config) #! change hint features number
 
 # Чтение данных из JSON файла
 with open('top_features.json', 'r') as json_file:
@@ -78,8 +78,8 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(X=texts, y=labels)):
     val_texts  = [texts[idx] for idx in val_idx]
     val_labels = [labels[idx] for idx in val_idx]
 
-    train_dataset = MathTextDataset(train_texts, train_labels, tokenizer, important_words, classes_list)
-    val_dataset = MathTextDataset(val_texts, val_labels, tokenizer, important_words, classes_list)
+    train_dataset = MathTextWithAttentionHints(train_texts, train_labels, tokenizer, important_words, idx2labels)
+    val_dataset = MathTextWithAttentionHints(val_texts, val_labels, tokenizer, important_words, idx2labels)
 
     # === Аргументы и Trainer ===
     #TODO: refactor trainer arguments
@@ -99,7 +99,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(X=texts, y=labels)):
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        data_collator=DataCollatorWithHints(),
+        data_collator=DataCollatorWithHintMask(),
         tokenizer=tokenizer,
     )
     

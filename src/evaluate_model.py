@@ -5,8 +5,8 @@ from utils.constants import *
 from utils.utils import (get_device, get_train_data,
                          evaleate_model, plot_confusion_matrix)
 from transformers import BertTokenizer
-from utils.hybrid_model import HybridModelHF, BertWithHints
-from utils.custom_text_datset import CustomTextDataset, MathTextDataset
+from utils.hybrid_model import HybridModelHF, BertWithHints, BertWithAttentionHints
+from utils.custom_text_datset import CustomTextDataset, MathTextDataset, MathTextWithAttentionHints
 import json
 from safetensors.torch import load_file
 
@@ -62,7 +62,7 @@ if args.use_hybrid:
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
     config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
     #TODO: set hint features according to the data from json file
-    model = BertWithHints(config=config, num_hint_features=76) #! change hint features number
+    model = BertWithAttentionHints(config=config) #! change hint features number
     
     # set model pretrained weights
     state_dict = load_file(f"{model_file_path.absolute()}/model.safetensors")
@@ -83,7 +83,7 @@ if args.use_hybrid:
         important_words = json.load(json_file)
         
     val_texts, val_labels = val_dataset['text'], val_dataset['label']
-    tokenized_val_dataset = MathTextDataset(val_texts, val_labels, tokenizer, important_words, classes_list)
+    tokenized_val_dataset = MathTextWithAttentionHints(val_texts, val_labels, tokenizer, important_words, idx2labels)
     true_labels = val_labels
 else:
     # Токенизация данных

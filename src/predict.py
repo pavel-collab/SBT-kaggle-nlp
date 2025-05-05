@@ -7,8 +7,8 @@ from utils.utils import get_test_data
 import pandas as pd
 from utils.constants import *
 from transformers import BertTokenizer
-from utils.hybrid_model import HybridModelHF, BertWithHints
-from utils.custom_text_datset import InferenceDataset, InferenceDatasetWithHints
+from utils.hybrid_model import HybridModelHF, BertWithHints, BertWithAttentionHints
+from utils.custom_text_datset import InferenceDataset, InferenceDatasetWithHints, InferenceDatasetWithAttentionHints
 import json
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader
@@ -63,7 +63,7 @@ if args.use_hybrid:
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
     config = BertConfig.from_pretrained("bert-base-uncased", num_labels=len(idx2labels))
     #TODO: set hint features according to the data from json file
-    model = BertWithHints(config=config, num_hint_features=76) #! change hint features number
+    model = BertWithAttentionHints(config=config) #! change hint features number
     
     state_dict = load_file(f"{model_file_path.absolute()}/model.safetensors")
     model.load_state_dict(state_dict=state_dict)
@@ -85,7 +85,7 @@ if args.use_hybrid:
     
     test_texts = test_dataset['text']
     # tokenized_test_dataset = InferenceDatasetWithHints(test_texts, tokenizer, important_words, idx2labels)
-    tokenized_test_dataset = InferenceDatasetWithHints(test_texts, tokenizer, important_words, classes_list)
+    tokenized_test_dataset = InferenceDatasetWithAttentionHints(test_texts, tokenizer, important_words)
 else:
     # Токенизация данных
     def tokenize_function(examples):
