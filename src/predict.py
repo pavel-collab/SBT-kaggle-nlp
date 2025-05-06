@@ -6,6 +6,8 @@ import numpy as np
 from utils.utils import get_test_data
 import pandas as pd
 from utils.constants import *
+from models.dataset import InferenceTextDataset
+from models.model import UnslothCustomClassifier
 
 SUBMISSION_FILE_NAME = 'submission.csv'
 
@@ -27,15 +29,18 @@ model_name = model_file_path.parent.name
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Загрузка токенизатора
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
-# Загрузка модели
-model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute())
+model = UnslothCustomClassifier(num_labels=n_classes)
+tokenizer = model.tokenizer
+
+model.load_state_dict(torch.load(f"{model_file_path.absolute()}/pytorch_model.bin"))
 
 model.to(device)
 model.eval()
 
 test_dataset = get_test_data()
+
+texts_to_predict = test_dataset['text']
+test_dataset = InferenceTextDataset(texts_to_predict, tokenizer)
 
 # Токенизация данных
 def tokenize_function(examples):

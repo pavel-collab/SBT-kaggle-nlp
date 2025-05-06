@@ -12,6 +12,8 @@ from utils.custom_trainer import CustomTrainer
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 from torch.utils.data import Dataset
+from models.model import UnslothCustomClassifier
+from models.dataset import TextClassificationDataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--use_generation', action='store_true', help='if we using generation data for train')
@@ -34,10 +36,11 @@ skf = StratifiedKFold(n_splits=num_folds,
 
 try:
     for model_name in model_list:
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=n_classes)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = UnslothCustomClassifier(num_labels=n_classes)
+        tokenizer = model.tokenizer
 
-        data_collator = DataCollatorWithPadding(tokenizer, max_length=256, padding=True) #? нужен для чего
+        train_dataset = TextClassificationDataset(texts, labels, tokenizer)
+        data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         model.to(device)
         
@@ -45,7 +48,7 @@ try:
             print(f"FOLD {fold}/{num_folds}")
 
             train_dtst = train_dataset.select(train_idx)
-            val_dtst  = train_dataset.select(val_idx)
+            val_dtst   = train_dataset.select(val_idx)
             
             # Токенизация данных
             def tokenize_function(examples):
@@ -69,14 +72,14 @@ try:
                 fp16=True,
                 gradient_accumulation_steps=2
             )
-            
-            trainer = CustomTrainer(
+
+            trainer = Trainer(
                 model=model,
                 args=training_args,
                 train_dataset=tokenized_train_dataset,
                 eval_dataset=tokenized_val_dataset,
-                # compute_metrics=compute_metrics,
-                class_weights=clw.class_weights.to(device)
+                tokenizer=tokenizer,
+                data_collator=data_collator
             )
             
             try:

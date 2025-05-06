@@ -4,6 +4,8 @@ from pathlib import Path
 from utils.constants import *
 from utils.utils import (get_device, get_train_data,
                          evaleate_model, plot_confusion_matrix)
+from models.dataset import TextClassificationDataset
+from models.model import UnslothCustomClassifier
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_path', help='set a path to the model that we want to evaluate')
@@ -27,16 +29,21 @@ assert(tokenizer_file_path.exists())
 
 model_name = model_file_path.parent.name
 
-# Загрузка токенизатора
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_file_path.absolute())
-# Загрузка модели
-model = AutoModelForSequenceClassification.from_pretrained(model_file_path.absolute(), num_labels=n_classes)
+model = UnslothCustomClassifier(num_labels=n_classes)
+tokenizer = model.tokenizer
+
+model.load_state_dict(torch.load(f"{model_file_path.absolute()}/pytorch_model.bin"))
 
 # детектируем девайс
 device = get_device()
 model.to(device)
 
 _, val_dataset = get_train_data()
+
+texts = val_dataset['text']
+labels = val_dataset['label']
+
+val_dataset = TextClassificationDataset(texts, labels, tokenizer)
 
 # Токенизация данных
 def tokenize_function(examples):
