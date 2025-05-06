@@ -15,7 +15,7 @@ model_list = [
 
 large_model_list = [
     'deepseek-ai/deepseek-math-7b-base', # 7b
-    'FacebookAI/roberta-large', # 356M
+    # 'FacebookAI/roberta-large', # 356M
     # 'google-bert/bert-large-uncased', # 336M
     # 'microsoft/deberta-v3-large',
     # 'xlnet/xlnet-large-cased',
@@ -34,7 +34,7 @@ train_csv_file = './data/train.csv'
 test_csv_file = './data/test.csv'
 generated_csv_file = './data/generated/generated_train.csv'
 
-batch_size = 2
+batch_size = 16
 num_epoches = 3
 num_folds = 5
 

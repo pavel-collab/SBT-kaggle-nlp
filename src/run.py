@@ -49,7 +49,7 @@ try:
             
             # Токенизация данных
             def tokenize_function(examples):
-                return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=32)
+                return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
 
             tokenized_train_dataset = train_dtst.map(tokenize_function, batched=True)
             tokenized_val_dataset = val_dtst.map(tokenize_function, batched=True)
@@ -64,10 +64,10 @@ try:
                 weight_decay=0.01,
                 logging_dir=f"./logs/{model_name.replace('/', '-')}_logs_fold_{fold}",  
                 save_steps=1000, # сохранение чекпоинтов модели каждые 1000 шагов# директория для логов TensorBoard
-                logging_steps=100,
+                logging_steps=250,
                 save_total_limit=5, # Сохранять только последние 5 чекпоинтов
                 # fp16=True,
-                gradient_accumulation_steps=8,
+                gradient_accumulation_steps=2,
                 max_grad_norm=0.3 # gradient cliping
             )
             #! There is some trouble with Custom trainer with using new model
@@ -93,10 +93,9 @@ try:
                 trainer.train()
             except Exception as ex:
                 print(f"[ERROR] with training {model_name}: {ex}")
+            trainer.save_model(f"./results/{model_name.replace('/', '-')}_results_fold_{fold}")
                 
             gc.collect()
             torch.cuda.empty_cache()
-                
-        tokenizer.save_pretrained(f"./results/{model_name.replace('/', '-')}_results/tokenizer")
 except KeyboardInterrupt:
     print(f"[STOP] training with keyboard interrupt")
