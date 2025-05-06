@@ -39,7 +39,7 @@ try:
         model = UnslothCustomClassifier(num_labels=n_classes)
         tokenizer = model.tokenizer
 
-        train_dataset = TextClassificationDataset(texts, labels, tokenizer)
+        #train_dataset = TextClassificationDataset(texts, labels, tokenizer)
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         model.to(device)
@@ -49,17 +49,27 @@ try:
 
             train_dtst = train_dataset.select(train_idx)
             val_dtst   = train_dataset.select(val_idx)
-            
+         
+            train_texts = train_dtst['text']
+            train_labels = train_dtst['label']
+            val_texts = val_dtst['text']
+            val_labels = val_dtst['label']
+
+            train_dtst = TextClassificationDataset(train_texts, train_labels, tokenizer)
+            val_dtst = TextClassificationDataset(val_texts, val_labels, tokenizer)
+
+            '''
             # Токенизация данных
             def tokenize_function(examples):
                 return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=256)
 
             tokenized_train_dataset = train_dtst.map(tokenize_function, batched=True)
             tokenized_val_dataset = val_dtst.map(tokenize_function, batched=True)
-            
+            '''
+
             training_args = TrainingArguments(
-                output_dir=f"./results/{model_name.replace('/', '-')}_results_fold_{fold}",
-                evaluation_strategy="steps",
+                #output_dir=f"./results/{model_name.replace('/', '-')}_results_fold_{fold}",
+                #evaluation_strategy="steps",
                 learning_rate=2e-5,
                 per_device_train_batch_size=batch_size,
                 per_device_eval_batch_size=batch_size,
@@ -76,8 +86,8 @@ try:
             trainer = Trainer(
                 model=model,
                 args=training_args,
-                train_dataset=tokenized_train_dataset,
-                eval_dataset=tokenized_val_dataset,
+                train_dataset=train_dtst,
+                eval_dataset=val_dtst,
                 tokenizer=tokenizer,
                 data_collator=data_collator
             )
@@ -86,6 +96,7 @@ try:
                 trainer.train()
             except Exception as ex:
                 print(f"[ERROR] with training {model_name}: {ex}")
+            trainer.save_model(f"./results/{model_name.replace('/', '-')}_results_fold_{fold}")
                 
         tokenizer.save_pretrained(f"./results/{model_name.replace('/', '-')}_results/tokenizer")
 except KeyboardInterrupt:

@@ -1,12 +1,12 @@
 import torch
 from torch import nn
 from unsloth import FastLanguageModel
-from classification_head import *
+from models.classification_head import *
 
 class UnslothCustomClassifier(nn.Module):
     def __init__(
         self,
-        model_name: str = "unsloth/Llama-3.2-1B-Instruct-unsloth-bnb-4bit",
+        model_name: str = "unsloth/Meta-Llama-3.1-8B-bnb-4bit",
         num_labels: int = 2,
         max_seq_length: int = 512,
         quantized: bool = True,
@@ -24,7 +24,7 @@ class UnslothCustomClassifier(nn.Module):
         self.hidden_size = self.model.config.hidden_size
         self.classifier = ClassificationHead2(self.hidden_size, num_labels)
 
-    def forward(self, input_ids, attention_mask=None, labels=None):
+    def forward(self, input_ids, attention_mask=None, labels=None, **kwargs):
         outputs = self.model.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
