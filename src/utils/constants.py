@@ -14,20 +14,15 @@ model_list = [
 ]
 
 large_model_list = [
-    'deepseek-ai/deepseek-math-7b-base',
-    # 'FacebookAI/roberta-large',
-    
-    #========================================#
-    
-    # 'bert-large-uncased',
-    # 'deberta-v3-large',
-    # 'xlnet-large-cased',
-    # 'electra-large-discriminator',
-    # 'albert-xxlarge-v2',
+    'deepseek-ai/deepseek-math-7b-base', # 7b
+    'FacebookAI/roberta-large', # 356M
+    # 'google-bert/bert-large-uncased', # 336M
+    # 'microsoft/deberta-v3-large',
+    # 'xlnet/xlnet-large-cased',
+    # 'google/electra-large-discriminator',
+    # 'albert/albert-xxlarge-v2', # 223M
     # 'facebook/bart-large',
-    # 'google/bigbirf-roberta-large',
-    # 'microsoft/mpnet-base',
-    # 'sentence-mpnet-base-v2',
+    # 'google/bigbird-roberta-large', #! maybe will be need special BigBirdModel.from_pretrained
 ]
 
 classes_list = ["Algebra", "Geometry and Trigonometry", "Calculus and Analysis",
