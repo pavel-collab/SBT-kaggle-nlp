@@ -110,7 +110,7 @@ def get_train_data(use_generation=False, get_class_weight_flag=False):
     df = pd.read_csv(train_csv_file)
     df = df.rename(columns={'Question': 'text'})
     
-    df['text'] = df['text'].apply(preprocess_text)
+    # df['text'] = df['text'].apply(preprocess_text)
 
     train_df, val_df = train_test_split(df, test_size=0.2, random_state=20)
     train_df = train_df.reset_index(drop=True)
@@ -134,7 +134,7 @@ def get_dataset(use_generation=False, get_class_weight_flag=False):
     df = pd.read_csv(train_csv_file)
     train_df = df.rename(columns={'Question': 'text'})
     
-    train_df['text'] = train_df['text'].apply(preprocess_text)
+    # train_df['text'] = train_df['text'].apply(preprocess_text)
     
     if use_generation:
         generated_df = pd.read_csv(generated_csv_file)

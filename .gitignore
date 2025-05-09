@@ -4,7 +4,8 @@ data
 results
 logs
 tmp_trainer
-.venv
+.venv*
 __pycache__
 tmp
 images
+unsloth_compiled_cache
